@@ -70,7 +70,11 @@ func main() {
 			panic(err)
 		}
 		c = rpc2.NewClient(conn)
-		go c.Run()
+		go func() {
+			for {
+				c.Run()
+			}
+		}()
 
 		c.Call("register", struct{}{}, &reply)
 
