@@ -1,0 +1,6 @@
+{
+    "channels": [
+        "#firewall"
+    ],
+    "logfile": "/var/log/messages"
+}
