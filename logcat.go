@@ -65,7 +65,7 @@ func main() {
 	}
 
 	go func() {
-		iptables := regexp.MustCompile("badguy dropped: .*SRC=([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}) .* DPT=([0-9]{1,5})")
+		iptables := regexp.MustCompile("badguy dropped: .*SRC=([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}) .* DPT=([0-9]{1,5}) .* PROTO=([A-Z]+) ")
 		fi, err := os.Stat(config.Logfile)
 		if err != nil {
 			fmt.Println("ERR:", err)
@@ -84,12 +84,13 @@ func main() {
 		}
 		for line := range log.Lines {
 			if match := iptables.FindStringSubmatch(line.Text); len(match) > 0 {
-				msg := fmt.Sprintf("DROPPED %v => <blackbox>:%v", match[1], match[2])
+				msg := fmt.Sprintf("DROPPED %v => <blackbox>:%v %v", match[1], match[2], match[3])
 				if debug {
 					fmt.Println(msg)
 				} else {
 					for _, channel := range config.Channels {
-						go c.Call("privmsg", &PrivMsg{channel, msg}, &reply)
+						var tmp bool
+						go c.Call("privmsg", &PrivMsg{channel, msg}, &tmp)
 					}
 				}
 			}
