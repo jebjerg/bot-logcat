@@ -24,7 +24,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	f, err := os.Open("/etc/services")
+	f, err := os.Open("/usr/share/nmap/nmap-services")
 	if err == nil {
 		services = make(map[string]string)
 		re_service := regexp.MustCompile("^(.+?)\\s+([0-9]+/[a-z]+)")
