@@ -110,8 +110,10 @@ func main() {
 					fmt.Println(msg)
 				} else {
 					for _, channel := range config.Channels {
-						var tmp bool
-						go c.Call("privmsg", &PrivMsg{channel, msg}, &tmp)
+						go func() {
+							var tmp bool
+							c.Call("privmsg", &PrivMsg{channel, msg}, &tmp)
+						}()
 					}
 				}
 			}
