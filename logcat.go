@@ -65,7 +65,7 @@ func main() {
 	}
 
 	go func() {
-		iptables := regexp.MustCompile("badguy dropped: .*SRC=([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}) .* DPT=([0-9]{1,5}) .* PROTO=([A-Z]+) ")
+		iptables := regexp.MustCompile("badguy dropped: .*SRC=([0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}) .* PROTO=([A-Z]+) .* DPT=([0-9]{1,5})")
 		fi, err := os.Stat(config.Logfile)
 		if err != nil {
 			fmt.Println("ERR:", err)
