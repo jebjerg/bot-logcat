@@ -29,14 +29,6 @@ type Config struct {
 	Logfile  string   `json:"logfile"`
 }
 
-func (c *Config) Save(path string) error {
-	if data, err := json.MarshalIndent(c, "", "    "); err != nil {
-		return err
-	} else {
-		return ioutil.WriteFile(path, data, 600)
-	}
-}
-
 func NewConfig(path string) (*Config, error) {
 	config := &Config{}
 	data, err := ioutil.ReadFile(path)
