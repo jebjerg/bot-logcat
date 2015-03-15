@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net"
 	"os"
 	"regexp"
+	"strings"
 )
 
 type PrivMsg struct {
@@ -21,6 +23,18 @@ func init() {
 	config, err = NewConfig("./logcat.json")
 	if err != nil {
 		panic(err)
+	}
+	f, err := os.Open("/etc/services")
+	if err == nil {
+		services = make(map[string]string)
+		re_service := regexp.MustCompile("^(.+?)\\s+([0-9]+/[a-z]+)")
+		data_lines := bufio.NewScanner(f)
+		for data_lines.Scan() {
+			line := data_lines.Text()
+			if match := re_service.FindStringSubmatch(line); len(match) > 0 {
+				services[match[2]] = match[1]
+			}
+		}
 	}
 }
 
@@ -39,6 +53,7 @@ func NewConfig(path string) (*Config, error) {
 	return config, err
 }
 
+var services map[string]string
 var config *Config
 var debug bool
 
@@ -84,7 +99,13 @@ func main() {
 		}
 		for line := range log.Lines {
 			if match := iptables.FindStringSubmatch(line.Text); len(match) > 0 {
-				msg := fmt.Sprintf("DROPPED %v => <blackbox>:%v %v", match[1], match[2], match[3])
+				service, ok := services[fmt.Sprintf("%v/%v", match[3], strings.ToLower(match[2]))]
+				var msg string
+				if ok {
+					msg = fmt.Sprintf("DROPPED %v => <blackbox>:%v %v [%v]", match[1], match[3], match[2], service)
+				} else {
+					msg = fmt.Sprintf("DROPPED %v => <blackbox>:%v %v", match[1], match[3], match[2])
+				}
 				if debug {
 					fmt.Println(msg)
 				} else {
