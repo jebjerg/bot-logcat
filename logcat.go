@@ -35,7 +35,7 @@ func init() {
 	history = fixedhistory.NewHistory(config.MaxItems)
 	history.ValueMap = func(i interface{}) interface{} {
 		switch t := i.(type) {
-		case HistoryItem:
+		case *HistoryItem:
 			return t.v
 		}
 		return i
