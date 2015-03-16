@@ -21,8 +21,9 @@ type PrivMsg struct {
 }
 
 type HistoryItem struct {
-	v string
-	t *time.Time
+	num int
+	v   string
+	t   *time.Time
 }
 
 func init() {
@@ -141,8 +142,19 @@ func main() {
 				suffix := ""
 				var msg string
 				ip_color := "00"
-				if history.Contains(match[1]) {
-					ip_color = "05"
+				if item := history.Get(match[1]); item != nil {
+					item := item.(*HistoryItem)
+					if item.num <= 1 {
+						ip_color = "00"
+					} else if item.num <= 10 {
+						ip_color = "03"
+					} else if item.num <= 50 {
+						ip_color = "02"
+					} else if item.num <= 100 {
+						ip_color = "08"
+					} else if item.num > 100 {
+						ip_color = "04"
+					}
 				}
 				proto_color := "08"
 				if match[2] == "TCP" {
@@ -164,8 +176,19 @@ func main() {
 						}()
 					}
 				}
-				now := time.Now()
-				history.Push(&HistoryItem{match[1], &now})
+				if history.Contains(match[1]) {
+					item := history.Get(match[1])
+					if item != nil {
+						item := item.(*HistoryItem)
+						item.num += 1
+						now := time.Now()
+						item.t = &now
+						history.Push(item)
+					}
+				} else {
+					now := time.Now()
+					history.Push(&HistoryItem{num: 1, v: match[1], t: &now})
+				}
 			}
 		}
 	}()
