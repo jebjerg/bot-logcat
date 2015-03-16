@@ -153,7 +153,7 @@ func main() {
 				if ok {
 					suffix = fmt.Sprintf("\00303%v\003", service)
 				}
-				msg = fmt.Sprintf("DROPPED \002\003%v%v\003\002 \00304=>\003 <blackbox>:\00304%v\003 \002%v%v\003\002 %v", ip_color, match[1], match[3], proto_color, match[2], suffix)
+				msg = fmt.Sprintf("DROPPED \002\003%v%v\003\002 \00304=>\003 <blackbox>:\00304%v\003 \002\003%v%v\003\002 %v", ip_color, match[1], match[3], proto_color, match[2], suffix)
 				if debug {
 					fmt.Println(msg)
 				} else {
