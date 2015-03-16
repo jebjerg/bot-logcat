@@ -104,12 +104,19 @@ func main() {
 		for line := range log.Lines {
 			if match := iptables.FindStringSubmatch(line.Text); len(match) > 0 {
 				service, ok := services[fmt.Sprintf("%v/%v", match[3], strings.ToLower(match[2]))]
+				suffix := ""
 				var msg string
-				if ok {
-					msg = fmt.Sprintf("DROPPED %v => <blackbox>:%v %v [%v]", match[1], match[3], match[2], service)
-				} else {
-					msg = fmt.Sprintf("DROPPED %v => <blackbox>:%v %v", match[1], match[3], match[2])
+				ip_color := "00"
+				proto_color := "08"
+				if match[2] == "TCP" {
+					proto_color = "02"
+				} else if match[2] == "UDP" {
+					proto_color = "06"
 				}
+				if ok {
+					suffix = fmt.Sprintf("\00303%v\003", service)
+				}
+				msg = fmt.Sprintf("DROPPED \002\003%v%v\003\002 \00304=>\003 <blackbox>:\00304%v\003 \002%v%v\003\002 %v", ip_color, match[1], match[3], proto_color, match[2], suffix)
 				if debug {
 					fmt.Println(msg)
 				} else {

@@ -2,5 +2,7 @@
     "channels": [
         "#firewall"
     ],
-    "logfile": "/var/log/messages"
+    "logfile": "/var/log/messages",
+    "max_items": 100,
+    "cleanup_interval": 5
 }
