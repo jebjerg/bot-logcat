@@ -1,6 +1,7 @@
 package main
 
 import (
+	"./fixedhistory"
 	"bufio"
 	"encoding/json"
 	"flag"
@@ -12,10 +13,16 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type PrivMsg struct {
 	Target, Text string
+}
+
+type HistoryItem struct {
+	v string
+	t *time.Time
 }
 
 func init() {
@@ -24,6 +31,30 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+
+	history = fixedhistory.NewHistory(config.MaxItems)
+	history.ValueMap = func(i interface{}) interface{} {
+		switch t := i.(type) {
+		case HistoryItem:
+			return t.v
+		}
+		return i
+	}
+	// define cleanup
+	go func() {
+		interval := time.NewTicker(time.Duration(config.Interval) * time.Minute)
+		for {
+			history.Cleanup(func(i interface{}) bool {
+				switch t := i.(type) {
+				case *HistoryItem:
+					return time.Since(*t.t) > time.Duration(config.Interval)*time.Minute
+				}
+				return false
+			})
+			<-interval.C
+		}
+	}()
+
 	f, err := os.Open("/usr/share/nmap/nmap-services")
 	if err == nil {
 		services = make(map[string]string)
@@ -41,6 +72,8 @@ func init() {
 type Config struct {
 	Channels []string `json:"channels"`
 	Logfile  string   `json:"logfile"`
+	MaxItems int      `json:"max_items"`
+	Interval int      `json:"cleanup_interval"`
 }
 
 func NewConfig(path string) (*Config, error) {
@@ -53,6 +86,7 @@ func NewConfig(path string) (*Config, error) {
 	return config, err
 }
 
+var history *fixedhistory.FixedArray
 var services map[string]string
 var config *Config
 var debug bool
@@ -107,6 +141,9 @@ func main() {
 				suffix := ""
 				var msg string
 				ip_color := "00"
+				if history.Contains(match[1]) {
+					ip_color = "05"
+				}
 				proto_color := "08"
 				if match[2] == "TCP" {
 					proto_color = "02"
@@ -127,6 +164,8 @@ func main() {
 						}()
 					}
 				}
+				now := time.Now()
+				history.Push(&HistoryItem{match[1], &now})
 			}
 		}
 	}()
