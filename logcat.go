@@ -1,14 +1,14 @@
 package main
 
 import (
-	"./fixedhistory"
+	cfg "github.com/jebjerg/go-bot/bot/config"
+
+	"github.com/jebjerg/fixedhistory"
 	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/cenkalti/rpc2"
-	"io/ioutil"
 	"net"
 	"os"
 	"regexp"
@@ -26,9 +26,22 @@ type HistoryItem struct {
 	t   *time.Time
 }
 
+type logcat_conf struct {
+	Channels []string `json:"channels"`
+	BotHost  string   `json:"bot_host"`
+	Logfile  string   `json:"logfile"`
+	MaxItems int      `json:"max_items"`
+	Interval int      `json:"cleanup_interval"`
+}
+
+var history *fixedhistory.FixedArray
+var services map[string]string
+var config *logcat_conf
+var debug bool
+
 func init() {
-	var err error
-	config, err = NewConfig("./logcat.json")
+	config = &logcat_conf{}
+	err := cfg.NewConfig(config, "logcat.json")
 	if err != nil {
 		panic(err)
 	}
@@ -70,39 +83,17 @@ func init() {
 	}
 }
 
-type Config struct {
-	Channels []string `json:"channels"`
-	Logfile  string   `json:"logfile"`
-	MaxItems int      `json:"max_items"`
-	Interval int      `json:"cleanup_interval"`
-}
-
-func NewConfig(path string) (*Config, error) {
-	config := &Config{}
-	data, err := ioutil.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	err = json.Unmarshal(data, config)
-	return config, err
-}
-
-var history *fixedhistory.FixedArray
-var services map[string]string
-var config *Config
-var debug bool
-
 func main() {
 	flag.BoolVar(&debug, "debug", false, "debug mode")
 	flag.Parse()
 
-	var reply bool
 	var c *rpc2.Client
 
 	if debug == false {
-		conn, err := net.Dial("tcp", "localhost:1234")
+		conn, err := net.Dial("tcp", config.BotHost)
 		if err != nil {
-			panic(err)
+			fmt.Println("connect error:", err)
+			os.Exit(1)
 		}
 		c = rpc2.NewClient(conn)
 		go func() {
@@ -111,10 +102,10 @@ func main() {
 			}
 		}()
 
-		c.Call("register", struct{}{}, &reply)
+		c.Call("register", struct{}{}, nil)
 
 		for _, channel := range config.Channels {
-			c.Call("join", channel, &reply)
+			c.Call("join", channel, nil)
 		}
 	}
 
