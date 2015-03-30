@@ -3,12 +3,12 @@ package main
 import (
 	cfg "github.com/jebjerg/go-bot/bot/config"
 
-	"github.com/jebjerg/fixedhistory"
 	"bufio"
 	"flag"
 	"fmt"
 	"github.com/ActiveState/tail"
 	"github.com/cenkalti/rpc2"
+	"github.com/jebjerg/fixedhistory"
 	"net"
 	"os"
 	"regexp"
@@ -30,6 +30,7 @@ type logcat_conf struct {
 	Channels []string `json:"channels"`
 	BotHost  string   `json:"bot_host"`
 	Logfile  string   `json:"logfile"`
+	Services string   `json:"services"`
 	MaxItems int      `json:"max_items"`
 	Interval int      `json:"cleanup_interval"`
 }
@@ -69,7 +70,7 @@ func init() {
 		}
 	}()
 
-	f, err := os.Open("/usr/share/nmap/nmap-services")
+	f, err := os.Open(config.Services)
 	if err == nil {
 		services = make(map[string]string)
 		re_service := regexp.MustCompile("^(.+?)\\s+([0-9]+/[a-z]+)")

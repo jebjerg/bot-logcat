@@ -4,6 +4,7 @@
         "#firewall"
     ],
     "logfile": "/var/log/messages",
+    "services": "/usr/share/nmap/nmap-services",
     "max_items": 100,
     "cleanup_interval": 5
 }
